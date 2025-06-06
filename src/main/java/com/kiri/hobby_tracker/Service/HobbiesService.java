@@ -1,33 +1,44 @@
 package com.kiri.hobby_tracker.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.kiri.hobby_tracker.Model.Category;
+import com.kiri.hobby_tracker.Model.CategoryDTO;
 import com.kiri.hobby_tracker.Model.Hobby;
 import com.kiri.hobby_tracker.Model.HobbyDTO;
 import com.kiri.hobby_tracker.Model.Minuspoint;
 import com.kiri.hobby_tracker.Model.Pluspoint;
 import com.kiri.hobby_tracker.Model.PointsDTO;
+import com.kiri.hobby_tracker.Repository.ICategoriesRepository;
 import com.kiri.hobby_tracker.Repository.IHobbiesRepository;
 import com.kiri.hobby_tracker.Repository.IMinuspointRepository;
 import com.kiri.hobby_tracker.Repository.IPluspointRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class HobbiesService {
 
     private final IHobbiesRepository hobbyRepository;
+    private final ICategoriesRepository categoriesRepository;
     private final IMinuspointRepository minuspointRepository;
     private final IPluspointRepository pluspointRepository;
 
     public HobbiesService(IHobbiesRepository hobbyRepository,
             IMinuspointRepository minuspointRepository,
-            IPluspointRepository pluspointRepository) {
+            IPluspointRepository pluspointRepository,
+            ICategoriesRepository categoryRepository) {
         this.hobbyRepository = hobbyRepository;
         this.minuspointRepository = minuspointRepository;
         this.pluspointRepository = pluspointRepository;
+        this.categoriesRepository = categoryRepository;
     }
 
     public List<HobbyDTO> getAllHobbies() {
@@ -61,9 +72,18 @@ public class HobbiesService {
             }
             hobbyDTO.setMinuspoints(minuspoints);
 
+            List<CategoryDTO> categories = new ArrayList<>();
+            for (Category category : hobby.getCategories()) {
+                CategoryDTO categoryDTO = new CategoryDTO();
+                categoryDTO.setId(category.getId());
+                categoryDTO.setName(category.getName());
+                categories.add(categoryDTO);
+            }
+            hobbyDTO.setCategories(categories);
+
             hobbyDTOs.add(hobbyDTO);
         }
-        
+
         return hobbyDTOs;
     }
 
@@ -93,12 +113,32 @@ public class HobbiesService {
                 pluspoints.add(ps);
             }
         }
+
         newHobby.setPluspoints(pluspoints);
         newHobby.setMinuspoints(minuspoints);
+
+                // Update categories
+        Set<Category> newCategories = new HashSet<>();
+
+        if (hobbyDTO.getCategories() != null) {
+            for (CategoryDTO categoryDTO : hobbyDTO.getCategories()) {
+                Category cat = categoriesRepository.findById(categoryDTO.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Category not found: " + categoryDTO.getId()));
+                newCategories.add(cat);
+            }
+        }
+        
+        newHobby.getCategories().clear();
+        newHobby.getCategories().addAll(newCategories);
+        
+        for (Category category : newCategories) {
+            category.getHobbies().add(newHobby);
+        }
 
         return hobbyRepository.save(newHobby);
     }
 
+    @Transactional
     public Hobby editHobby(long id, HobbyDTO hobbyDTO) {
         Hobby existing = hobbyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Hobby not found"));
@@ -130,6 +170,24 @@ public class HobbiesService {
             }
         }
 
+        // Update categories
+        Set<Category> newCategories = new HashSet<>();
+
+        if (hobbyDTO.getCategories() != null) {
+            for (CategoryDTO categoryDTO : hobbyDTO.getCategories()) {
+                Category cat = categoriesRepository.findById(categoryDTO.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Category not found: " + categoryDTO.getId()));
+                newCategories.add(cat);
+            }
+        }
+        
+        existing.getCategories().clear();
+        existing.getCategories().addAll(newCategories);
+        
+        for (Category category : newCategories) {
+            category.getHobbies().add(existing);
+        }
+        
         return hobbyRepository.save(existing);
     }
 

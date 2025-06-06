@@ -1,4 +1,5 @@
 package com.kiri.hobby_tracker.Model;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,14 +17,19 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Data
+@EqualsAndHashCode(exclude = {"categories"})
+@ToString(exclude = {"categories"})
 @Entity
 public class Hobby {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @NotBlank(message = "Name is required")
     private String name;
     private String description;
@@ -34,9 +40,9 @@ public class Hobby {
 
     @ManyToMany
     @JoinTable(
-        name = "hobby_category",
-        joinColumns = @JoinColumn(name = "hobby_id"),
-        inverseJoinColumns = @JoinColumn(name = "category_id")
+            name = "hobby_category",
+            joinColumns = @JoinColumn(name = "hobby_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
     )
     private Set<Category> categories = new HashSet<>();
 
@@ -46,19 +52,13 @@ public class Hobby {
     @OneToMany(mappedBy = "hobby", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Minuspoint> minuspoints = new ArrayList<>();
 
-    
-
-    public Hobby() {}
+    public Hobby() {
+    }
 
     public Hobby(Long id, String name, String description) {
         this.id = id;
         this.name = name;
         this.description = description;
     }
-    public void setName(String name) {
-        this.name = name;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
+
 }

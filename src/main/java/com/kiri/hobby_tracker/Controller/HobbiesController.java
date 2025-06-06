@@ -45,7 +45,8 @@ public class HobbiesController {
     @PutMapping("/editHobby/{id}")
     public Hobby editHobby(@RequestBody HobbyDTO hobby, @PathVariable Long id) {
         try {
-            return hobbiesService.editHobby(id, hobby);
+            Hobby hobbyToReturn = hobbiesService.editHobby(id, hobby);
+            return hobbyToReturn;
         } catch (Exception e) {
             System.out.println("Error fetching hobbies: " + e.getMessage());
         }
