@@ -117,7 +117,7 @@ public class HobbiesService {
         newHobby.setPluspoints(pluspoints);
         newHobby.setMinuspoints(minuspoints);
 
-                // Update categories
+        // Update categories
         Set<Category> newCategories = new HashSet<>();
 
         if (hobbyDTO.getCategories() != null) {
@@ -130,10 +130,6 @@ public class HobbiesService {
         
         newHobby.getCategories().clear();
         newHobby.getCategories().addAll(newCategories);
-        
-        for (Category category : newCategories) {
-            category.getHobbies().add(newHobby);
-        }
 
         return hobbyRepository.save(newHobby);
     }

@@ -19,7 +19,7 @@ public class GoogleService {
     public String GoogleGenerativeAIAPIReq(String query) {
         String url = "https://generativelanguage.googleapis.com/v1/models" + model + ":generateContent?key=" + apiKey;
         System.out.println("Google AI API URL: " + url);
-        String prompt = "Explain how AI works";
+        String prompt = query;
         String jsonRequestBody = """
         {
             "contents": [{
@@ -28,7 +28,9 @@ public class GoogleService {
                 }]
             }]
         }
-        """.formatted(prompt);
+        """.formatted(escapeJson(prompt));
+
+        System.out.println(prompt);
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
@@ -56,4 +58,13 @@ public class GoogleService {
                 "Response body: " + response.body());
         return response.body();
     }
+
+    public static String escapeJson(String str) {
+        return str.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
+
 }
