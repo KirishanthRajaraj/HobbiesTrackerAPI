@@ -52,6 +52,9 @@ public class Hobby {
     @OneToMany(mappedBy = "hobby", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Minuspoint> minuspoints = new ArrayList<>();
 
+    @OneToMany(mappedBy = "hobby", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<HobbyDates> dates = new ArrayList<>();
+
     public Hobby() {
     }
 

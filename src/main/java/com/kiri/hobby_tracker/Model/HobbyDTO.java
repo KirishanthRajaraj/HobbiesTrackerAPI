@@ -14,11 +14,12 @@ public class HobbyDTO {
     private List<PointsDTO> pluspoints;
     private List<PointsDTO> minuspoints;
     private List<CategoryDTO> categories;
+    private List<HobbyDates> dates;
 
     public HobbyDTO() {}
 
     public HobbyDTO(Long id, String name, String description, Integer effortLevel, Integer interestLevel,
-                    List<PointsDTO> pluspoints, List<PointsDTO> minuspoints, List<CategoryDTO> categories) {
+                    List<PointsDTO> pluspoints, List<PointsDTO> minuspoints, List<CategoryDTO> categories, List<HobbyDates> dates) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -27,6 +28,7 @@ public class HobbyDTO {
         this.pluspoints = pluspoints;
         this.minuspoints = minuspoints;
         this.categories = categories;
+        this.dates = dates;
     }
 
 }

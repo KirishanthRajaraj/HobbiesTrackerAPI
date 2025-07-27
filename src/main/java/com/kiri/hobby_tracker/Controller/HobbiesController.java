@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kiri.hobby_tracker.Model.Hobby;
 import com.kiri.hobby_tracker.Model.HobbyDTO;
+import com.kiri.hobby_tracker.Model.HobbyDatesDTO;
 import com.kiri.hobby_tracker.Service.HobbiesService;
 
 @CrossOrigin
@@ -51,6 +52,27 @@ public class HobbiesController {
             System.out.println("Error fetching hobbies: " + e.getMessage());
         }
         return new Hobby();
+    }
+
+    @PutMapping("/updateHobbyDate/")
+    public ResponseEntity<Void> updateHobbyDate(@RequestBody HobbyDatesDTO hobbyDate) {
+        try {
+            hobbiesService.updateHobbyDate(hobbyDate);
+        } catch (Exception e) {
+            System.out.println("Error fetching hobbies: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/getAllHobbyDates/")
+    public List<HobbyDatesDTO> getAllHobbyDates() {
+        try {
+            return hobbiesService.getAllHobbyDates();
+        } catch (Exception e) {
+            System.out.println("Error fetching hobbies: " + e.getMessage());
+        }
+        return null;
     }
 
     @DeleteMapping("/deleteHobby/{id}")

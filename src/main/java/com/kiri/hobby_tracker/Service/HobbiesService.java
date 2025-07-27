@@ -3,6 +3,7 @@ package com.kiri.hobby_tracker.Service;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
@@ -12,11 +13,14 @@ import com.kiri.hobby_tracker.Model.Category;
 import com.kiri.hobby_tracker.Model.CategoryDTO;
 import com.kiri.hobby_tracker.Model.Hobby;
 import com.kiri.hobby_tracker.Model.HobbyDTO;
+import com.kiri.hobby_tracker.Model.HobbyDates;
+import com.kiri.hobby_tracker.Model.HobbyDatesDTO;
 import com.kiri.hobby_tracker.Model.Minuspoint;
 import com.kiri.hobby_tracker.Model.Pluspoint;
 import com.kiri.hobby_tracker.Model.PointsDTO;
 import com.kiri.hobby_tracker.Repository.ICategoriesRepository;
 import com.kiri.hobby_tracker.Repository.IHobbiesRepository;
+import com.kiri.hobby_tracker.Repository.IHobbyDatesRepository;
 import com.kiri.hobby_tracker.Repository.IMinuspointRepository;
 import com.kiri.hobby_tracker.Repository.IPluspointRepository;
 
@@ -30,15 +34,18 @@ public class HobbiesService {
     private final ICategoriesRepository categoriesRepository;
     private final IMinuspointRepository minuspointRepository;
     private final IPluspointRepository pluspointRepository;
+    private final IHobbyDatesRepository hobbyDatesRepository;
 
     public HobbiesService(IHobbiesRepository hobbyRepository,
             IMinuspointRepository minuspointRepository,
             IPluspointRepository pluspointRepository,
-            ICategoriesRepository categoryRepository) {
+            ICategoriesRepository categoryRepository,
+            IHobbyDatesRepository hobbyDatesRepository) {
         this.hobbyRepository = hobbyRepository;
         this.minuspointRepository = minuspointRepository;
         this.pluspointRepository = pluspointRepository;
         this.categoriesRepository = categoryRepository;
+        this.hobbyDatesRepository = hobbyDatesRepository;
     }
 
     public List<HobbyDTO> getAllHobbies() {
@@ -127,7 +134,7 @@ public class HobbiesService {
                 newCategories.add(cat);
             }
         }
-        
+
         newHobby.getCategories().clear();
         newHobby.getCategories().addAll(newCategories);
 
@@ -136,33 +143,33 @@ public class HobbiesService {
 
     @Transactional
     public Hobby editHobby(long id, HobbyDTO hobbyDTO) {
-        Hobby existing = hobbyRepository.findById(id)
+        Hobby existingHobby = hobbyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Hobby not found"));
 
-        existing.setName(hobbyDTO.getName());
-        existing.setDescription(hobbyDTO.getDescription());
-        existing.setEffortLevel(hobbyDTO.getEffortLevel());
-        existing.setInterestLevel(hobbyDTO.getInterestLevel());
+        existingHobby.setName(hobbyDTO.getName());
+        existingHobby.setDescription(hobbyDTO.getDescription());
+        existingHobby.setEffortLevel(hobbyDTO.getEffortLevel());
+        existingHobby.setInterestLevel(hobbyDTO.getInterestLevel());
 
         // Update minuspoints
-        existing.getMinuspoints().clear();
+        existingHobby.getMinuspoints().clear();
         if (hobbyDTO.getMinuspoints() != null) {
             for (PointsDTO mp : hobbyDTO.getMinuspoints()) {
                 Minuspoint ms = new Minuspoint();
                 ms.setText(mp.getText());
-                ms.setHobby(existing);
-                existing.getMinuspoints().add(ms);
+                ms.setHobby(existingHobby);
+                existingHobby.getMinuspoints().add(ms);
             }
         }
 
         // Update pluspoints
-        existing.getPluspoints().clear();
+        existingHobby.getPluspoints().clear();
         if (hobbyDTO.getPluspoints() != null) {
             for (PointsDTO pp : hobbyDTO.getPluspoints()) {
                 Pluspoint ps = new Pluspoint();
                 ps.setText(pp.getText());
-                ps.setHobby(existing);
-                existing.getPluspoints().add(ps);
+                ps.setHobby(existingHobby);
+                existingHobby.getPluspoints().add(ps);
             }
         }
 
@@ -176,15 +183,60 @@ public class HobbiesService {
                 newCategories.add(cat);
             }
         }
-        
-        existing.getCategories().clear();
-        existing.getCategories().addAll(newCategories);
-        
+
+        existingHobby.getCategories().clear();
+        existingHobby.getCategories().addAll(newCategories);
+
         for (Category category : newCategories) {
-            category.getHobbies().add(existing);
+            category.getHobbies().add(existingHobby);
         }
-        
-        return hobbyRepository.save(existing);
+
+        return hobbyRepository.save(existingHobby);
+    }
+
+    public void updateHobbyDate(HobbyDatesDTO newHobbyDateDTO) {
+
+        Hobby existingHobby = hobbyRepository.findById(newHobbyDateDTO.getHobbyId())
+                .orElseThrow(() -> new RuntimeException("Hobby not found"));
+
+        HobbyDates newHobbyDate = hobbyDatesRepository.findById(newHobbyDateDTO.getId())
+                .orElseGet(() -> {
+                    HobbyDates hd = new HobbyDates();
+                    hd.setDate(newHobbyDateDTO.getDate());
+                    hd.setHobby(existingHobby);
+                    return hd;
+                });
+
+        List<HobbyDates> existingDates = existingHobby.getDates();
+
+        // loop through hobbydates
+        // determine if the date already exists for the existing hobby
+        // if it does, update the date
+        // if it does not, add the date to the existing hobby
+        if (newHobbyDate.getId() != null) {
+            // Try to find existing HobbyDates by id
+            Optional<HobbyDates> existingDateOpt = existingDates.stream()
+                    .filter(d -> d.getId().equals(newHobbyDate.getId()))
+                    .findFirst();
+
+            if (existingDateOpt.isPresent()) {
+                // Update the existing entity fields
+                HobbyDates existingDate = existingDateOpt.get();
+                existingDate.setDate(newHobbyDate.getDate());
+                // update other fields as needed
+            } else {
+                // id present but not found in existing list - treat as new
+                newHobbyDate.setHobby(existingHobby);
+                existingDates.add(newHobbyDate);
+            }
+        } else {
+            // new HobbyDates (no id)
+            newHobbyDate.setHobby(existingHobby);
+            existingDates.add(newHobbyDate);
+        }
+
+        hobbyRepository.save(existingHobby);
+
     }
 
     public ResponseEntity<Void> deleteHobby(long id) {
@@ -194,5 +246,18 @@ public class HobbiesService {
 
         hobbyRepository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    public List<HobbyDatesDTO> getAllHobbyDates() {
+        List<HobbyDates> hds = hobbyDatesRepository.findAll();
+        List<HobbyDatesDTO> hdsDTO = new ArrayList<>();
+        for (HobbyDates hd : hds) {
+            HobbyDatesDTO hdDTO = new HobbyDatesDTO();
+            hdDTO.setDate(hd.getDate());
+            hdDTO.setHobbyId(hd.getHobby().getId());
+            hdDTO.setId(hd.getId());
+            hdsDTO.add(hdDTO);
+        }
+        return hdsDTO;
     }
 }
