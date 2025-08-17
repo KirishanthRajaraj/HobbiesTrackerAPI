@@ -1,13 +1,18 @@
 package com.kiri.hobby_tracker.Model;
 
+import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -37,6 +42,22 @@ public class Hobby {
     private Integer interestLevel;
     @Column(name = "effort_level")
     private Integer effortLevel;
+    @Column(name = "points_interval_type")
+    @Enumerated(EnumType.STRING)
+    private PointsInterval pointIntervalType;
+    @ElementCollection(targetClass = DayOfWeek.class)
+    @Enumerated(EnumType.STRING)
+    @CollectionTable(name = "hobby_interval_weekdays", joinColumns = @JoinColumn(name = "hobby_id"))
+    @Column(name = "weekday")
+    private Set<DaysOfWeek> intervalPointsDaysOfWeek;
+    @ElementCollection
+    @CollectionTable(name = "hobby_interval_monthdays", joinColumns = @JoinColumn(name = "hobby_id"))
+    @Column(name = "day_of_month")
+    private Set<Integer> intervalDaysOfMonth;
+    @Column(name = "points_current")
+    private Integer pointsCurrent;
+    @Column(name = "points_valued")
+    private Integer pointsValued;
 
     @ManyToMany
     @JoinTable(
@@ -44,6 +65,7 @@ public class Hobby {
             joinColumns = @JoinColumn(name = "hobby_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
+
     private Set<Category> categories = new HashSet<>();
 
     @OneToMany(mappedBy = "hobby", cascade = CascadeType.ALL, orphanRemoval = true)

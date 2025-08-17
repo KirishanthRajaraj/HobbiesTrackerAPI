@@ -54,10 +54,22 @@ public class HobbiesController {
         return new Hobby();
     }
 
+    
     @PutMapping("/updateHobbyDate/")
     public ResponseEntity<Void> updateHobbyDate(@RequestBody HobbyDatesDTO hobbyDate) {
         try {
             hobbiesService.updateHobbyDate(hobbyDate);
+        } catch (Exception e) {
+            System.out.println("Error fetching hobbies: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/removeHobbyDate/")
+    public ResponseEntity<Void> removeHobbyDate(@RequestBody HobbyDatesDTO hobbyDate) {
+        try {
+            hobbiesService.removeHobbyDate(hobbyDate);
         } catch (Exception e) {
             System.out.println("Error fetching hobbies: " + e.getMessage());
             return ResponseEntity.internalServerError().build();

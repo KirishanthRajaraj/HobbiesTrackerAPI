@@ -2,6 +2,8 @@ package com.kiri.hobby_tracker.Model;
 
 import lombok.Data;
 
+// not to be confused with the other points classes and enums
+// this pointsDTO is for minus and plus points
 @Data
 public class PointsDTO {
 

@@ -5,8 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.kiri.hobby_tracker.Model.Category;
@@ -194,7 +196,9 @@ public class HobbiesService {
         return hobbyRepository.save(existingHobby);
     }
 
-    public void updateHobbyDate(HobbyDatesDTO newHobbyDateDTO) {
+    @Transactional
+    @Async
+    public CompletableFuture<Void> updateHobbyDate(HobbyDatesDTO newHobbyDateDTO) {
 
         Hobby existingHobby = hobbyRepository.findById(newHobbyDateDTO.getHobbyId())
                 .orElseThrow(() -> new RuntimeException("Hobby not found"));
@@ -236,7 +240,7 @@ public class HobbiesService {
         }
 
         hobbyRepository.save(existingHobby);
-
+        return CompletableFuture.completedFuture(null);
     }
 
     public ResponseEntity<Void> deleteHobby(long id) {
@@ -259,5 +263,15 @@ public class HobbiesService {
             hdsDTO.add(hdDTO);
         }
         return hdsDTO;
+    }
+
+    @Transactional
+    @Async
+    public CompletableFuture<Void> removeHobbyDate(HobbyDatesDTO hobbyDateDTO) {
+        HobbyDates hobbyDate = hobbyDatesRepository.findById(hobbyDateDTO.getId())
+                .orElseThrow(() -> new RuntimeException("Hobby date not found"));
+
+        hobbyDatesRepository.delete(hobbyDate);
+        return CompletableFuture.completedFuture(null);
     }
 }
