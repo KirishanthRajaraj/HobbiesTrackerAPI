@@ -54,7 +54,6 @@ public class HobbiesController {
         return new Hobby();
     }
 
-    
     @PutMapping("/updateHobbyDate/")
     public ResponseEntity<Void> updateHobbyDate(@RequestBody HobbyDatesDTO hobbyDate) {
         try {
@@ -70,6 +69,50 @@ public class HobbiesController {
     public ResponseEntity<Void> removeHobbyDate(@RequestBody HobbyDatesDTO hobbyDate) {
         try {
             hobbiesService.removeHobbyDate(hobbyDate);
+        } catch (Exception e) {
+            System.out.println("Error fetching hobbies: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/updateIntervalDate/")
+    public ResponseEntity<Void> updateIntervalDate(@RequestBody HobbyDatesDTO hobbyDate) {
+        try {
+            hobbiesService.updateHobbyDate(hobbyDate);
+        } catch (Exception e) {
+            System.out.println("Error fetching hobbies: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/removeIntervalDate/")
+    public ResponseEntity<Void> removeIntervalDate(@RequestBody HobbyDatesDTO hobbyDate) {
+        try {
+            hobbiesService.removeHobbyDate(hobbyDate);
+        } catch (Exception e) {
+            System.out.println("Error fetching hobbies: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/updateHobbyPoints/{hobbyId}")
+    public ResponseEntity<Void> updateHobbyPoints(@PathVariable Long hobbyId) {
+        try {
+            hobbiesService.updateHobbyPoints(hobbyId);
+        } catch (Exception e) {
+            System.out.println("Error fetching hobbies: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/removeHobbyPoints/{hobbyId}")
+    public ResponseEntity<Void> removeHobbyPoints(@PathVariable Long hobbyId) {
+        try {
+            hobbiesService.removeHobbyPoints(hobbyId);
         } catch (Exception e) {
             System.out.println("Error fetching hobbies: " + e.getMessage());
             return ResponseEntity.internalServerError().build();

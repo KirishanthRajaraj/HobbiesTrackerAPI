@@ -60,6 +60,8 @@ public class HobbiesService {
             hobbyDTO.setDescription(hobby.getDescription());
             hobbyDTO.setEffortLevel(hobby.getEffortLevel());
             hobbyDTO.setInterestLevel(hobby.getInterestLevel());
+            hobbyDTO.setPointsValued(hobby.getPointsValued());
+            hobbyDTO.setPointsCurrent(hobby.getPointsCurrent());
 
             List<PointsDTO> pluspoints = new ArrayList<>();
             for (Pluspoint pp : hobby.getPluspoints()) {
@@ -152,7 +154,8 @@ public class HobbiesService {
         existingHobby.setDescription(hobbyDTO.getDescription());
         existingHobby.setEffortLevel(hobbyDTO.getEffortLevel());
         existingHobby.setInterestLevel(hobbyDTO.getInterestLevel());
-
+        existingHobby.setPointsValued(hobbyDTO.getPointsValued());
+        System.out.println("Points Valued set to: " + hobbyDTO.getPointsValued());
         // Update minuspoints
         existingHobby.getMinuspoints().clear();
         if (hobbyDTO.getMinuspoints() != null) {
@@ -193,6 +196,7 @@ public class HobbiesService {
             category.getHobbies().add(existingHobby);
         }
 
+        // Update Interval stuff
         return hobbyRepository.save(existingHobby);
     }
 
@@ -273,5 +277,27 @@ public class HobbiesService {
 
         hobbyDatesRepository.delete(hobbyDate);
         return CompletableFuture.completedFuture(null);
+    }
+
+    public void updateHobbyPoints(Long hobbyId) {
+        Hobby hobby = hobbyRepository.findById(hobbyId)
+                .orElseThrow(() -> new RuntimeException("Hobby date not found"));
+
+        int calculatedPoints = (hobby.getPointsCurrent() != null ? hobby.getPointsCurrent() : 0) + (hobby.getPointsValued());
+
+        hobby.setPointsCurrent(calculatedPoints);
+        hobbyRepository.save(hobby);
+
+    }
+
+    public void removeHobbyPoints(Long hobbyId) {
+        Hobby hobby = hobbyRepository.findById(hobbyId)
+                .orElseThrow(() -> new RuntimeException("Hobby date not found"));
+
+        int calculatedPoints = (hobby.getPointsCurrent() != null ? hobby.getPointsCurrent() : 0) - (hobby.getPointsValued());
+
+        hobby.setPointsCurrent(calculatedPoints);
+        hobbyRepository.save(hobby);
+
     }
 }
