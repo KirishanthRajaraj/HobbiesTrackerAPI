@@ -55,17 +55,17 @@ public class HobbiesController {
     }
 
     @PutMapping("/updateHobbyDate/")
-    public ResponseEntity<Void> updateHobbyDate(@RequestBody HobbyDatesDTO hobbyDate) {
+    public HobbyDatesDTO updateHobbyDate(@RequestBody HobbyDatesDTO hobbyDate) {
+        HobbyDatesDTO updatedHobbyDate = null;
         try {
-            hobbiesService.updateHobbyDate(hobbyDate);
+            updatedHobbyDate = hobbiesService.updateHobbyDate(hobbyDate);
         } catch (Exception e) {
             System.out.println("Error fetching hobbies: " + e.getMessage());
-            return ResponseEntity.internalServerError().build();
         }
-        return ResponseEntity.ok().build();
+       return updatedHobbyDate;
     }
 
-    @PutMapping("/removeHobbyDate/")
+    @DeleteMapping("/removeHobbyDate/")
     public ResponseEntity<Void> removeHobbyDate(@RequestBody HobbyDatesDTO hobbyDate) {
         try {
             hobbiesService.removeHobbyDate(hobbyDate);
@@ -99,25 +99,25 @@ public class HobbiesController {
     }
 
     @PutMapping("/updateHobbyPoints/{hobbyId}")
-    public ResponseEntity<Void> updateHobbyPoints(@PathVariable Long hobbyId) {
+    public Integer updateHobbyPoints(@PathVariable Long hobbyId) {
+        Integer updatedPoints = null;
         try {
-            hobbiesService.updateHobbyPoints(hobbyId);
+            updatedPoints = hobbiesService.updateHobbyPoints(hobbyId);
         } catch (Exception e) {
             System.out.println("Error fetching hobbies: " + e.getMessage());
-            return ResponseEntity.internalServerError().build();
         }
-        return ResponseEntity.ok().build();
+        return updatedPoints;
     }
 
     @DeleteMapping("/removeHobbyPoints/{hobbyId}")
-    public ResponseEntity<Void> removeHobbyPoints(@PathVariable Long hobbyId) {
+    public Integer removeHobbyPoints(@PathVariable Long hobbyId) {
+        Integer updatedPoints = null;
         try {
-            hobbiesService.removeHobbyPoints(hobbyId);
+            updatedPoints = hobbiesService.removeHobbyPoints(hobbyId);
         } catch (Exception e) {
             System.out.println("Error fetching hobbies: " + e.getMessage());
-            return ResponseEntity.internalServerError().build();
         }
-        return ResponseEntity.ok().build();
+        return updatedPoints;
     }
 
     @GetMapping("/getAllHobbyDates/")

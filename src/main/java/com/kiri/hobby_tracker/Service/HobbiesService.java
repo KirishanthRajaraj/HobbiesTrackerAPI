@@ -201,8 +201,7 @@ public class HobbiesService {
     }
 
     @Transactional
-    @Async
-    public CompletableFuture<Void> updateHobbyDate(HobbyDatesDTO newHobbyDateDTO) {
+    public HobbyDatesDTO updateHobbyDate(HobbyDatesDTO newHobbyDateDTO) {
 
         Hobby existingHobby = hobbyRepository.findById(newHobbyDateDTO.getHobbyId())
                 .orElseThrow(() -> new RuntimeException("Hobby not found"));
@@ -243,8 +242,14 @@ public class HobbiesService {
             existingDates.add(newHobbyDate);
         }
 
-        hobbyRepository.save(existingHobby);
-        return CompletableFuture.completedFuture(null);
+        Hobby savedHobby = hobbyRepository.save(existingHobby);
+
+        HobbyDates savedDate = savedHobby.getDates().stream()
+                .filter(d -> d.getDate().equals(newHobbyDate.getDate()) && d.getHobby().getId().equals(existingHobby.getId()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Saved hobby date not found"));
+
+        return new HobbyDatesDTO(savedDate);
     }
 
     public ResponseEntity<Void> deleteHobby(long id) {
@@ -279,7 +284,7 @@ public class HobbiesService {
         return CompletableFuture.completedFuture(null);
     }
 
-    public void updateHobbyPoints(Long hobbyId) {
+    public Integer updateHobbyPoints(Long hobbyId) {
         Hobby hobby = hobbyRepository.findById(hobbyId)
                 .orElseThrow(() -> new RuntimeException("Hobby date not found"));
 
@@ -288,9 +293,10 @@ public class HobbiesService {
         hobby.setPointsCurrent(calculatedPoints);
         hobbyRepository.save(hobby);
 
+        return calculatedPoints;
     }
 
-    public void removeHobbyPoints(Long hobbyId) {
+    public Integer removeHobbyPoints(Long hobbyId) {
         Hobby hobby = hobbyRepository.findById(hobbyId)
                 .orElseThrow(() -> new RuntimeException("Hobby date not found"));
 
@@ -299,5 +305,6 @@ public class HobbiesService {
         hobby.setPointsCurrent(calculatedPoints);
         hobbyRepository.save(hobby);
 
+        return calculatedPoints;
     }
 }
