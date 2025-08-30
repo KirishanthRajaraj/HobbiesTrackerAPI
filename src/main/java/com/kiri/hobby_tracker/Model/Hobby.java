@@ -49,7 +49,7 @@ public class Hobby {
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "hobby_interval_weekdays", joinColumns = @JoinColumn(name = "hobby_id"))
     @Column(name = "weekday")
-    private Set<DaysOfWeek> intervalPointsDaysOfWeek;
+    private Set<DaysOfWeek> intervalDaysOfWeek;
     @ElementCollection
     @CollectionTable(name = "hobby_interval_monthdays", joinColumns = @JoinColumn(name = "hobby_id"))
     @Column(name = "day_of_month")
@@ -80,10 +80,19 @@ public class Hobby {
     public Hobby() {
     }
 
-    public Hobby(Long id, String name, String description) {
+    public Hobby(Long id, String name, String description, Integer interestLevel, Integer effortLevel, PointsInterval pointIntervalType,
+            Set<DaysOfWeek> intervalDaysOfWeek, Set<Integer> intervalDaysOfMonth, Integer pointsCurrent,
+            Integer pointsValued) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.interestLevel = interestLevel;
+        this.effortLevel = effortLevel;
+        this.pointIntervalType = pointIntervalType;
+        this.intervalDaysOfWeek = intervalDaysOfWeek;
+        this.intervalDaysOfMonth = intervalDaysOfMonth;
+        this.pointsCurrent = pointsCurrent;
+        this.pointsValued = pointsValued;
     }
 
 }

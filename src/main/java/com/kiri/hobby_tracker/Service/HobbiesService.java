@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -91,11 +92,84 @@ public class HobbiesService {
                 categories.add(categoryDTO);
             }
             hobbyDTO.setCategories(categories);
+            List<HobbyDatesDTO> datesDTOs = hobby.getDates().stream()
+                    .map(d -> {
+                        HobbyDatesDTO dto = new HobbyDatesDTO();
+                        dto.setId(d.getId());
+                        dto.setDate(d.getDate());
+                        dto.setHobbyId(d.getHobby().getId());
+                        return dto;
+                    })
+                    .collect(Collectors.toList());
+
+            hobbyDTO.setDates(datesDTOs);
+            hobbyDTO.setPointIntervalType(hobby.getPointIntervalType());
+            hobbyDTO.setIntervalDaysOfWeek(hobby.getIntervalDaysOfWeek());
+            hobbyDTO.setIntervalDaysOfMonth(hobby.getIntervalDaysOfMonth());
 
             hobbyDTOs.add(hobbyDTO);
         }
 
         return hobbyDTOs;
+    }
+
+    public HobbyDTO getHobbyById(long id) {
+        Hobby hobby = hobbyRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Hobby not found with id " + id));
+
+        HobbyDTO hobbyDTO = new HobbyDTO();
+        hobbyDTO.setId(hobby.getId());
+        hobbyDTO.setName(hobby.getName());
+        hobbyDTO.setDescription(hobby.getDescription());
+        hobbyDTO.setEffortLevel(hobby.getEffortLevel());
+        hobbyDTO.setInterestLevel(hobby.getInterestLevel());
+        hobbyDTO.setPointsValued(hobby.getPointsValued());
+        hobbyDTO.setPointsCurrent(hobby.getPointsCurrent());
+
+        List<PointsDTO> pluspoints = new ArrayList<>();
+        for (Pluspoint pp : hobby.getPluspoints()) {
+            PointsDTO ppDTO = new PointsDTO();
+            ppDTO.setId(pp.getId());
+            ppDTO.setText(pp.getText());
+            ppDTO.setHobbyId(hobby.getId());
+            pluspoints.add(ppDTO);
+        }
+        hobbyDTO.setPluspoints(pluspoints);
+
+        List<PointsDTO> minuspoints = new ArrayList<>();
+        for (Minuspoint mp : hobby.getMinuspoints()) {
+            PointsDTO mpDTO = new PointsDTO();
+            mpDTO.setId(mp.getId());
+            mpDTO.setText(mp.getText());
+            mpDTO.setHobbyId(hobby.getId());
+            minuspoints.add(mpDTO);
+        }
+        hobbyDTO.setMinuspoints(minuspoints);
+
+        List<CategoryDTO> categories = new ArrayList<>();
+        for (Category category : hobby.getCategories()) {
+            CategoryDTO categoryDTO = new CategoryDTO();
+            categoryDTO.setId(category.getId());
+            categoryDTO.setName(category.getName());
+            categories.add(categoryDTO);
+        }
+        hobbyDTO.setCategories(categories);
+        List<HobbyDatesDTO> datesDTOs = hobby.getDates().stream()
+                .map(d -> {
+                    HobbyDatesDTO dto = new HobbyDatesDTO();
+                    dto.setId(d.getId());
+                    dto.setDate(d.getDate());
+                    dto.setHobbyId(d.getHobby().getId());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        hobbyDTO.setDates(datesDTOs);
+        hobbyDTO.setPointIntervalType(hobby.getPointIntervalType());
+        hobbyDTO.setIntervalDaysOfWeek(hobby.getIntervalDaysOfWeek());
+        hobbyDTO.setIntervalDaysOfMonth(hobby.getIntervalDaysOfMonth());
+
+        return hobbyDTO;
     }
 
     public Hobby addHobby(HobbyDTO hobbyDTO) {
@@ -201,6 +275,82 @@ public class HobbiesService {
     }
 
     @Transactional
+    public Hobby patchHobby(long id, HobbyDTO hobbyPatch) {
+        Hobby hobby = hobbyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Hobby not found"));
+
+        // apply only non-null fields from DTO
+        if (hobbyPatch.getName() != null && !hobbyPatch.getName().trim().isEmpty()) {
+            hobby.setName(hobbyPatch.getName());
+        }
+        if (hobbyPatch.getDescription() != null && !hobbyPatch.getDescription().trim().isEmpty()) {
+            hobby.setDescription(hobbyPatch.getDescription());
+        }
+        if (hobbyPatch.getEffortLevel() != null && hobbyPatch.getEffortLevel() != 0) {
+            hobby.setEffortLevel(hobbyPatch.getEffortLevel());
+        }
+        if (hobbyPatch.getInterestLevel() != null && hobbyPatch.getInterestLevel() != 0) {
+
+            hobby.setInterestLevel(hobbyPatch.getInterestLevel());
+        }
+        if (hobbyPatch.getPointsValued() != null && hobbyPatch.getPointsValued() != 0) {
+            hobby.setPointsValued(hobbyPatch.getPointsValued());
+            System.out.println("Points Valued set to: " + hobbyPatch.getPointsValued());
+        }
+        if (hobbyPatch.getPointsCurrent() != null && hobbyPatch.getPointsCurrent() != 0) {
+            hobby.setPointsCurrent(hobbyPatch.getPointsCurrent());
+        }
+        if (hobbyPatch.getPluspoints() != null && !hobbyPatch.getPluspoints().isEmpty()) {
+            // Clear existing pluspoints
+            hobby.getPluspoints().clear();
+            // Add new pluspoints
+            for (PointsDTO pp : hobbyPatch.getPluspoints()) {
+                Pluspoint ps = new Pluspoint();
+                ps.setText(pp.getText());
+                ps.setHobby(hobby);
+                hobby.getPluspoints().add(ps);
+            }
+        }
+        if (hobbyPatch.getMinuspoints() != null && !hobbyPatch.getMinuspoints().isEmpty()) {
+            // Clear existing minuspoints
+            hobby.getMinuspoints().clear();
+            // Add new minuspoints
+            for (PointsDTO mp : hobbyPatch.getMinuspoints()) {
+                Minuspoint ms = new Minuspoint();
+                ms.setText(mp.getText());
+                ms.setHobby(hobby);
+                hobby.getMinuspoints().add(ms);
+            }
+        }
+        if (hobbyPatch.getCategories() != null && !hobbyPatch.getCategories().isEmpty()) {
+            Set<Category> newCategories = new HashSet<>();
+            for (CategoryDTO categoryDTO : hobbyPatch.getCategories()) {
+                Category cat = categoriesRepository.findById(categoryDTO.getId())
+                        .orElseThrow(() -> new EntityNotFoundException("Category not found: "
+                        + categoryDTO.getId()));
+                newCategories.add(cat);
+            }
+            hobby.getCategories().clear();
+            hobby.getCategories().addAll(newCategories);
+            for (Category category : newCategories) {
+                category.getHobbies().add(hobby);
+            }
+        }
+        if (hobbyPatch.getPointIntervalType() != null) {
+            hobby.setPointIntervalType(hobbyPatch.getPointIntervalType());
+        }
+        if (hobbyPatch.getIntervalDaysOfWeek() != null) {
+            hobby.setIntervalDaysOfWeek(hobbyPatch.getIntervalDaysOfWeek());
+        }
+        if (hobbyPatch.getIntervalDaysOfMonth() != null) {
+            hobby.setIntervalDaysOfMonth(hobbyPatch.getIntervalDaysOfMonth());
+        }
+
+        Hobby updated = hobbyRepository.save(hobby);
+        return updated;
+    }
+
+    @Transactional
     public HobbyDatesDTO updateHobbyDate(HobbyDatesDTO newHobbyDateDTO) {
 
         Hobby existingHobby = hobbyRepository.findById(newHobbyDateDTO.getHobbyId())
@@ -263,6 +413,19 @@ public class HobbiesService {
 
     public List<HobbyDatesDTO> getAllHobbyDates() {
         List<HobbyDates> hds = hobbyDatesRepository.findAll();
+        List<HobbyDatesDTO> hdsDTO = new ArrayList<>();
+        for (HobbyDates hd : hds) {
+            HobbyDatesDTO hdDTO = new HobbyDatesDTO();
+            hdDTO.setDate(hd.getDate());
+            hdDTO.setHobbyId(hd.getHobby().getId());
+            hdDTO.setId(hd.getId());
+            hdsDTO.add(hdDTO);
+        }
+        return hdsDTO;
+    }
+
+    public List<HobbyDatesDTO> getHobbyDatesByHobbyId(Long hobbyId) {
+        List<HobbyDates> hds = hobbyDatesRepository.findByHobby_Id(hobbyId);
         List<HobbyDatesDTO> hdsDTO = new ArrayList<>();
         for (HobbyDates hd : hds) {
             HobbyDatesDTO hdDTO = new HobbyDatesDTO();
