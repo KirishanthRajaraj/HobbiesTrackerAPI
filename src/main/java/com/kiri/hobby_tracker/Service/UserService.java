@@ -19,9 +19,9 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User register(String username, String rawPassword) {
+    public User register(String username, String email, String rawPassword) {
         String hashedPassword = passwordEncoder.encode(rawPassword);
-        User user = new User(username, hashedPassword, Set.of("ROLE_USER"));
+        User user = new User(username, email, hashedPassword, Set.of("ROLE_USER"));
         return userRepository.save(user);
     }
 
